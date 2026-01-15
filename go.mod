@@ -1,4 +1,4 @@
-module github.com/quikapp/bookmark-service
+module github.com/quckapp/bookmark-service
 
 go 1.21
 

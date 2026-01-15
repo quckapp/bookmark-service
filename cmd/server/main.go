@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/quikapp/bookmark-service/internal/config"
-	"github.com/quikapp/bookmark-service/internal/handler"
-	"github.com/quikapp/bookmark-service/internal/repository"
-	"github.com/quikapp/bookmark-service/internal/service"
+	"github.com/quckapp/bookmark-service/internal/config"
+	"github.com/quckapp/bookmark-service/internal/handler"
+	"github.com/quckapp/bookmark-service/internal/repository"
+	"github.com/quckapp/bookmark-service/internal/service"
 	"go.uber.org/zap"
 )
 

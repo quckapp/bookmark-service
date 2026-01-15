@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"github.com/quikapp/bookmark-service/internal/model"
-	"github.com/quikapp/bookmark-service/internal/repository"
+	"github.com/quckapp/bookmark-service/internal/model"
+	"github.com/quckapp/bookmark-service/internal/repository"
 	"go.uber.org/zap"
 )
 

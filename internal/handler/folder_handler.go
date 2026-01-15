@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/quikapp/bookmark-service/internal/model"
-	"github.com/quikapp/bookmark-service/internal/service"
+	"github.com/quckapp/bookmark-service/internal/model"
+	"github.com/quckapp/bookmark-service/internal/service"
 )
 
 type FolderHandler struct {

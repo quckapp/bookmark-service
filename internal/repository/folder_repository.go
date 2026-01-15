@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/google/uuid"
-	"github.com/quikapp/bookmark-service/internal/model"
+	"github.com/quckapp/bookmark-service/internal/model"
 	"gorm.io/gorm"
 )
 

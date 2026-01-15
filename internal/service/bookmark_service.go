@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/quikapp/bookmark-service/internal/model"
-	"github.com/quikapp/bookmark-service/internal/repository"
+	"github.com/quckapp/bookmark-service/internal/model"
+	"github.com/quckapp/bookmark-service/internal/repository"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )

@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: quikapp-bookmark-service
+    container_name: quckapp-bookmark-service
     ports:
       - "5010:5010"
     environment:
@@ -14,7 +14,7 @@ services:
       - DB_PORT=3306
       - DB_USER=root
       - DB_PASSWORD=password
-      - DB_NAME=quikapp_bookmarks
+      - DB_NAME=quckapp_bookmarks
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
@@ -23,17 +23,17 @@ services:
       redis:
         condition: service_started
     networks:
-      - quikapp-network
+      - quckapp-network
     restart: unless-stopped
 
   mysql:
     image: mysql:8.0
-    container_name: quikapp-bookmark-mysql
+    container_name: quckapp-bookmark-mysql
     ports:
       - "3311:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=quikapp_bookmarks
+      - MYSQL_DATABASE=quckapp_bookmarks
     volumes:
       - bookmark-mysql-data:/var/lib/mysql
     healthcheck:
@@ -42,19 +42,19 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - quikapp-network
+      - quckapp-network
 
   redis:
     image: redis:7-alpine
-    container_name: quikapp-bookmark-redis
+    container_name: quckapp-bookmark-redis
     ports:
       - "6384:6379"
     networks:
-      - quikapp-network
+      - quckapp-network
 
 volumes:
   bookmark-mysql-data:
 
 networks:
-  quikapp-network:
+  quckapp-network:
     driver: bridge
