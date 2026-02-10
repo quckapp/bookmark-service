@@ -187,3 +187,84 @@ func (h *BookmarkHandler) MoveToFolder(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Bookmark moved"})
 }
+
+func (h *BookmarkHandler) GetByFolder(c *gin.Context) {
+	folderID, err := uuid.Parse(c.Param("folderId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid folder ID"})
+		return
+	}
+
+	bookmarks, err := h.service.GetByFolder(folderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": bookmarks})
+}
+
+func (h *BookmarkHandler) BulkDelete(c *gin.Context) {
+	var req model.BulkDeleteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var ids []uuid.UUID
+	for _, idStr := range req.IDs {
+		id, _ := uuid.Parse(idStr)
+		ids = append(ids, id)
+	}
+
+	success, failed, err := h.service.BulkDelete(ids)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"deleted": success, "failed": failed})
+}
+
+func (h *BookmarkHandler) BulkMove(c *gin.Context) {
+	var req model.BulkMoveRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var ids []uuid.UUID
+	for _, idStr := range req.IDs {
+		id, _ := uuid.Parse(idStr)
+		ids = append(ids, id)
+	}
+
+	var folderID *uuid.UUID
+	if req.FolderID != "" {
+		id, _ := uuid.Parse(req.FolderID)
+		folderID = &id
+	}
+
+	success, failed, err := h.service.BulkMove(ids, folderID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"moved": success, "failed": failed})
+}
+
+func (h *BookmarkHandler) Reorder(c *gin.Context) {
+	var req model.ReorderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.Reorder(req.Items); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Bookmarks reordered"})
+}
