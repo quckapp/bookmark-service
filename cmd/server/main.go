@@ -5,10 +5,12 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	goauth "github.com/quckapp/go-auth"
 	"github.com/quckapp/bookmark-service/internal/config"
 	"github.com/quckapp/bookmark-service/internal/handler"
 	"github.com/quckapp/bookmark-service/internal/repository"
 	"github.com/quckapp/bookmark-service/internal/service"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -41,16 +43,32 @@ func main() {
 	bookmarkHandler := handler.NewBookmarkHandler(bookmarkService)
 	folderHandler := handler.NewFolderHandler(folderService)
 
-	// Setup router
-	router := gin.Default()
+	// Setup router with shared middleware
+	logrusLogger := logrus.New()
+	logrusLogger.SetFormatter(&logrus.JSONFormatter{})
 
-	// Health check
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(goauth.RequestID())
+	router.Use(goauth.CORS())
+	router.Use(goauth.Logger(logrusLogger))
+
+	// Health check (no auth required)
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "healthy"})
 	})
+	router.GET("/ready", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ready"})
+	})
 
-	// API routes
-	api := router.Group("/api/bookmarks")
+	// Auth middleware configuration
+	authCfg := goauth.DefaultConfig(cfg.JWTSecret)
+
+	// Authenticated API routes
+	authenticated := router.Group("")
+	authenticated.Use(goauth.Auth(authCfg))
+
+	api := authenticated.Group("/api/bookmarks")
 	{
 		api.POST("", bookmarkHandler.Create)
 		api.GET("/:id", bookmarkHandler.GetByID)
@@ -61,7 +79,7 @@ func main() {
 		api.POST("/:id/move", bookmarkHandler.MoveToFolder)
 	}
 
-	folders := router.Group("/api/bookmark-folders")
+	folders := authenticated.Group("/api/bookmark-folders")
 	{
 		folders.POST("", folderHandler.Create)
 		folders.GET("/:id", folderHandler.GetByID)

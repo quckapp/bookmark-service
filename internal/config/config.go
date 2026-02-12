@@ -18,6 +18,7 @@ type Config struct {
 	DBName     string
 	RedisHost  string
 	RedisPort  string
+	JWTSecret  string
 }
 
 func Load() *Config {
@@ -29,6 +30,7 @@ func Load() *Config {
 		DBName:     getEnv("DB_NAME", "quckapp_bookmarks"),
 		RedisHost:  getEnv("REDIS_HOST", "localhost"),
 		RedisPort:  getEnv("REDIS_PORT", "6379"),
+		JWTSecret:  getEnv("JWT_SECRET", "dev_jwt_secret_change_in_production_min_32_chars"),
 	}
 }
 
