@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	goauth "github.com/quckapp/go-auth"
+
 	"github.com/quckapp/bookmark-service/internal/config"
 	"github.com/quckapp/bookmark-service/internal/handler"
 	"github.com/quckapp/bookmark-service/internal/repository"
@@ -83,16 +85,27 @@ func main() {
 	expirationHandler := handler.NewExpirationHandler(expirationService)
 	templateHandler := handler.NewTemplateHandler(templateService)
 
-	// Setup router
-	router := gin.Default()
+	// Setup router with auth middleware
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(goauth.RequestID())
+	router.Use(goauth.CORS())
 
-	// Health check
+	// Health check (no auth required)
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "healthy", "service": "bookmark-service"})
 	})
+	router.GET("/ready", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ready"})
+	})
+
+	// JWT auth middleware for all /api/* routes
+	authCfg := goauth.DefaultConfig(cfg.JWTSecret)
+	authenticated := router.Group("")
+	authenticated.Use(goauth.Auth(authCfg))
 
 	// Bookmark CRUD
-	api := router.Group("/api/bookmarks")
+	api := authenticated.Group("/api/bookmarks")
 	{
 		api.POST("", bookmarkHandler.Create)
 		api.GET("/:id", bookmarkHandler.GetByID)
@@ -157,7 +170,7 @@ func main() {
 	}
 
 	// Folders
-	folders := router.Group("/api/bookmark-folders")
+	folders := authenticated.Group("/api/bookmark-folders")
 	{
 		folders.POST("", folderHandler.Create)
 		folders.GET("/:id", folderHandler.GetByID)
@@ -169,7 +182,7 @@ func main() {
 	}
 
 	// Tags
-	tags := router.Group("/api/bookmark-tags")
+	tags := authenticated.Group("/api/bookmark-tags")
 	{
 		tags.POST("", tagHandler.Create)
 		tags.GET("/:id", tagHandler.GetByID)
@@ -181,7 +194,7 @@ func main() {
 	}
 
 	// Collections
-	collections := router.Group("/api/bookmark-collections")
+	collections := authenticated.Group("/api/bookmark-collections")
 	{
 		collections.POST("", collectionHandler.Create)
 		collections.GET("/:id", collectionHandler.GetByID)
@@ -196,7 +209,7 @@ func main() {
 	}
 
 	// Sharing
-	sharing := router.Group("/api/bookmark-shares")
+	sharing := authenticated.Group("/api/bookmark-shares")
 	{
 		sharing.POST("/user/:userId", sharingHandler.Share)
 		sharing.GET("/received/:userId", sharingHandler.GetSharedWithUser)
@@ -207,7 +220,7 @@ func main() {
 	}
 
 	// User-level resources
-	users := router.Group("/api/bookmark-users")
+	users := authenticated.Group("/api/bookmark-users")
 	{
 		// Notes
 		users.GET("/:userId/notes", noteHandler.GetByUser)
@@ -230,14 +243,14 @@ func main() {
 	}
 
 	// Link Previews
-	previews := router.Group("/api/bookmark-previews")
+	previews := authenticated.Group("/api/bookmark-previews")
 	{
 		previews.POST("", previewHandler.Create)
 		previews.GET("/:url", previewHandler.GetByURL)
 	}
 
 	// Read Later
-	readLater := router.Group("/api/bookmark-readlater")
+	readLater := authenticated.Group("/api/bookmark-readlater")
 	{
 		readLater.POST("/:userId", readLaterHandler.Add)
 		readLater.GET("/:userId", readLaterHandler.List)
@@ -246,13 +259,13 @@ func main() {
 	}
 
 	// Expirations
-	expirations := router.Group("/api/bookmark-expirations")
+	expirations := authenticated.Group("/api/bookmark-expirations")
 	{
 		expirations.GET("/:userId/expiring", expirationHandler.GetExpiring)
 	}
 
 	// Templates
-	templates := router.Group("/api/bookmark-templates")
+	templates := authenticated.Group("/api/bookmark-templates")
 	{
 		templates.POST("", templateHandler.Create)
 		templates.GET("/user/:userId", templateHandler.GetByUser)
