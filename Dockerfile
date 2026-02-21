@@ -1,4 +1,5 @@
 # Build stage
+# NOTE: Build context is repo root (.) to resolve replace directive for go-auth
 FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
@@ -6,12 +7,16 @@ WORKDIR /app
 # Install dependencies
 RUN apk add --no-cache git
 
-# Copy go mod files
-COPY go.mod go.sum ./
+# Copy go-auth package (referenced via replace directive)
+COPY packages/go-auth /app/packages/go-auth
+
+# Copy service go mod files
+WORKDIR /app/services/bookmark-service
+COPY services/bookmark-service/go.mod services/bookmark-service/go.sum ./
 RUN go mod download
 
-# Copy source code
-COPY . .
+# Copy service source code
+COPY services/bookmark-service/ .
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server ./cmd/server
