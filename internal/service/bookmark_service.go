@@ -18,9 +18,13 @@ type BookmarkService interface {
 	GetByID(id uuid.UUID) (*model.Bookmark, error)
 	GetByUser(userID uuid.UUID, page, limit int) ([]model.Bookmark, int64, error)
 	GetByUserAndWorkspace(userID, workspaceID uuid.UUID, page, limit int) ([]model.Bookmark, int64, error)
+	GetByFolder(folderID uuid.UUID) ([]model.Bookmark, error)
 	Update(bookmark *model.Bookmark) error
 	Delete(id uuid.UUID) error
 	MoveToFolder(bookmarkID uuid.UUID, folderID *uuid.UUID) error
+	BulkDelete(ids []uuid.UUID) (int, int, error)
+	BulkMove(ids []uuid.UUID, folderID *uuid.UUID) (int, int, error)
+	Reorder(items []model.ReorderItem) error
 }
 
 type bookmarkService struct {
@@ -147,6 +151,60 @@ func (s *bookmarkService) MoveToFolder(bookmarkID uuid.UUID, folderID *uuid.UUID
 	}
 
 	return s.repo.MoveToFolder(bookmarkID, folderID)
+}
+
+func (s *bookmarkService) GetByFolder(folderID uuid.UUID) ([]model.Bookmark, error) {
+	return s.repo.GetByFolder(folderID)
+}
+
+func (s *bookmarkService) BulkDelete(ids []uuid.UUID) (int, int, error) {
+	success := 0
+	failed := 0
+	for _, id := range ids {
+		if err := s.repo.Delete(id); err != nil {
+			failed++
+		} else {
+			s.invalidateBookmarkCache(id)
+			success++
+		}
+	}
+	return success, failed, nil
+}
+
+func (s *bookmarkService) BulkMove(ids []uuid.UUID, folderID *uuid.UUID) (int, int, error) {
+	if folderID != nil {
+		_, err := s.folderRepo.GetByID(*folderID)
+		if err != nil {
+			return 0, len(ids), fmt.Errorf("folder not found")
+		}
+	}
+
+	success := 0
+	failed := 0
+	for _, id := range ids {
+		if err := s.repo.MoveToFolder(id, folderID); err != nil {
+			failed++
+		} else {
+			success++
+		}
+	}
+	return success, failed, nil
+}
+
+func (s *bookmarkService) Reorder(items []model.ReorderItem) error {
+	for _, item := range items {
+		id, err := uuid.Parse(item.ID)
+		if err != nil {
+			continue
+		}
+		bookmark, err := s.repo.GetByID(id)
+		if err != nil {
+			continue
+		}
+		bookmark.Position = item.Position
+		s.repo.Update(bookmark)
+	}
+	return nil
 }
 
 func (s *bookmarkService) invalidateBookmarkCache(id uuid.UUID) {

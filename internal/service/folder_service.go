@@ -11,8 +11,10 @@ type FolderService interface {
 	Create(folder *model.BookmarkFolder) error
 	GetByID(id uuid.UUID) (*model.BookmarkFolder, error)
 	GetByUser(userID uuid.UUID) ([]model.BookmarkFolder, error)
+	GetByUserAndWorkspace(userID, workspaceID uuid.UUID) ([]model.BookmarkFolder, error)
 	Update(folder *model.BookmarkFolder) error
 	Delete(id uuid.UUID) error
+	Reorder(items []model.ReorderItem) error
 }
 
 type folderService struct {
@@ -41,6 +43,10 @@ func (s *folderService) GetByUser(userID uuid.UUID) ([]model.BookmarkFolder, err
 	return s.repo.GetByUser(userID)
 }
 
+func (s *folderService) GetByUserAndWorkspace(userID, workspaceID uuid.UUID) ([]model.BookmarkFolder, error) {
+	return s.repo.GetByUserAndWorkspace(userID, workspaceID)
+}
+
 func (s *folderService) Update(folder *model.BookmarkFolder) error {
 	existing, err := s.repo.GetByID(folder.ID)
 	if err != nil {
@@ -62,5 +68,21 @@ func (s *folderService) Delete(id uuid.UUID) error {
 		return err
 	}
 	s.logger.Info("Deleted bookmark folder", zap.String("id", id.String()))
+	return nil
+}
+
+func (s *folderService) Reorder(items []model.ReorderItem) error {
+	for _, item := range items {
+		id, err := uuid.Parse(item.ID)
+		if err != nil {
+			continue
+		}
+		folder, err := s.repo.GetByID(id)
+		if err != nil {
+			continue
+		}
+		folder.Position = item.Position
+		s.repo.Update(folder)
+	}
 	return nil
 }
