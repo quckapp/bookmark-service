@@ -5,11 +5,11 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	goauth "github.com/quckapp/go-auth"
 	"github.com/quckapp/bookmark-service/internal/config"
 	"github.com/quckapp/bookmark-service/internal/handler"
 	"github.com/quckapp/bookmark-service/internal/repository"
 	"github.com/quckapp/bookmark-service/internal/service"
+	goauth "github.com/quckapp/go-auth"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
@@ -113,7 +113,7 @@ func main() {
 	authenticated := router.Group("")
 	authenticated.Use(goauth.Auth(authCfg))
 
-	api := authenticated.Group("/api/bookmarks")
+	api := authenticated.Group("/api/v1/bookmarks")
 	{
 		api.POST("", bookmarkHandler.Create)
 		api.GET("/:id", bookmarkHandler.GetByID)
@@ -177,7 +177,7 @@ func main() {
 		api.DELETE("/:id/expiration", expirationHandler.Remove)
 	}
 
-	folders := authenticated.Group("/api/bookmark-folders")
+	folders := authenticated.Group("/api/v1/bookmark-folders")
 	{
 		folders.POST("", folderHandler.Create)
 		folders.GET("/:id", folderHandler.GetByID)
@@ -189,7 +189,7 @@ func main() {
 	}
 
 	// Tags
-	tags := authenticated.Group("/api/bookmark-tags")
+	tags := authenticated.Group("/api/v1/bookmark-tags")
 	{
 		tags.POST("", tagHandler.Create)
 		tags.GET("/:id", tagHandler.GetByID)
@@ -201,7 +201,7 @@ func main() {
 	}
 
 	// Collections
-	collections := authenticated.Group("/api/bookmark-collections")
+	collections := authenticated.Group("/api/v1/bookmark-collections")
 	{
 		collections.POST("", collectionHandler.Create)
 		collections.GET("/:id", collectionHandler.GetByID)
@@ -216,7 +216,7 @@ func main() {
 	}
 
 	// Sharing
-	sharing := authenticated.Group("/api/bookmark-shares")
+	sharing := authenticated.Group("/api/v1/bookmark-shares")
 	{
 		sharing.POST("/user/:userId", sharingHandler.Share)
 		sharing.GET("/received/:userId", sharingHandler.GetSharedWithUser)
@@ -227,7 +227,7 @@ func main() {
 	}
 
 	// User-level resources
-	users := authenticated.Group("/api/bookmark-users")
+	users := authenticated.Group("/api/v1/bookmark-users")
 	{
 		// Notes
 		users.GET("/:userId/notes", noteHandler.GetByUser)
@@ -250,14 +250,14 @@ func main() {
 	}
 
 	// Link Previews
-	previews := authenticated.Group("/api/bookmark-previews")
+	previews := authenticated.Group("/api/v1/bookmark-previews")
 	{
 		previews.POST("", previewHandler.Create)
 		previews.GET("/:url", previewHandler.GetByURL)
 	}
 
 	// Read Later
-	readLater := authenticated.Group("/api/bookmark-readlater")
+	readLater := authenticated.Group("/api/v1/bookmark-readlater")
 	{
 		readLater.POST("/:userId", readLaterHandler.Add)
 		readLater.GET("/:userId", readLaterHandler.List)
@@ -266,13 +266,13 @@ func main() {
 	}
 
 	// Expirations
-	expirations := authenticated.Group("/api/bookmark-expirations")
+	expirations := authenticated.Group("/api/v1/bookmark-expirations")
 	{
 		expirations.GET("/:userId/expiring", expirationHandler.GetExpiring)
 	}
 
 	// Templates
-	templates := authenticated.Group("/api/bookmark-templates")
+	templates := authenticated.Group("/api/v1/bookmark-templates")
 	{
 		templates.POST("", templateHandler.Create)
 		templates.GET("/user/:userId", templateHandler.GetByUser)
